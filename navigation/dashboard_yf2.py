@@ -14,7 +14,7 @@ MA_COLOR = 'orange'
 MA_COLOR2 = 'red'
 PC_COLOR = 'grey'
 # IN_DATA = {}
-CALL_LIST =  ['NQ=F', '^VIX', 'ZB=F', 'JPY=X', ]
+CALL_LIST = ['NQ=F', '^VIX', 'ZB=F', 'JPY=X', ]
 
 
 # with st.spinner('Wait for it...'):
@@ -101,6 +101,13 @@ def normalize(df):
 def pageII():
     start_proc = time.time()
 
+    todate = pd.to_datetime('now', utc=True) - timedelta(days=1)
+    last_date = load_data('BTC-USD')['Date'].iloc[-1]
+    # print(todate, ' || ', last_date)
+    if todate > last_date:
+        print('Refresh data')
+        pre_load_data(['BTC-USD'] + CALL_LIST)
+
     ct1, _ = st.columns(2)
     with ct1:
         st.title('Market Dashboard', anchor="title", help="This page shows major market indices.")
@@ -120,8 +127,8 @@ def pageII():
     # The code has been simplified by using a dictionary to store the resolution options and default values
     # for each filter option, instead of having multiple if conditionals for each option.
 
-    period_dict = {'1MO':30, '3MO':90, '6MO':180, '1Y':365, '2Y':730, '3Y':1095, }
-    period_list = ['1MO', '3MO', '6MO', '1Y', '2Y', '3Y', ]
+    period_dict = {'1MO':30, '3MO':90, '6MO':180, '1Y':365, '3Y':1095,}
+    period_list = ['1MO', '3MO', '6MO', '1Y', '3Y', ]
     # check = st.sidebar.radio('Filter', period_list, horizontal=True, index=1)
     check = st.sidebar.select_slider('Period', options=period_list, value="1MO", key='allrresolution')
 
@@ -288,9 +295,9 @@ def pageII():
         coin_df['Prev_Close'] = info["prevClose"]
 
         coin_df['Close_Price'] = normalize(coin_df['Close'])
-        coin_df['rsi'] = normalize(talib.RSI(coin_df.Close))
-        coin_df['momentum'] = normalize(talib.MOM(coin_df.Close))
-        coin_df['chaikin-ADOSC'] = normalize(talib.ADOSC(coin_df.High, coin_df.Low, coin_df.Close, coin_df.Volume, ))
+        coin_df['RSI'] = normalize(talib.RSI(coin_df.Close))
+        coin_df['MOMENTUM'] = normalize(talib.MOM(coin_df.Close))
+        coin_df['Chaikin-ADOSC'] = normalize(talib.ADOSC(coin_df.High, coin_df.Low, coin_df.Close, coin_df.Volume, ))
         coin_df = coin_df[-period_dict[check]:]
 
         # Candle and volume chart
@@ -314,9 +321,9 @@ def pageII():
         fig.add_trace(
             go.Scatter(
                 x=coin_df['Date'],
-                y=coin_df['rsi'],
+                y=coin_df['RSI'],
                 line=dict(color='red', width=2, dash='dot'),
-                name="rsi"
+                name="RSI"
             ), row=1, col=1
         )
         # fig['layout']['yaxis2']['title'] = 'RSI'
@@ -324,9 +331,9 @@ def pageII():
         fig.add_trace(
             go.Scatter(
                 x=coin_df['Date'],
-                y=coin_df['momentum'],
+                y=coin_df['MOMENTUM'],
                 line=dict(color='beige', width=2, dash='dot'),
-                name="momentum"
+                name="MOMENTUM"
             ), row=1, col=1
         )
         # fig['layout']['yaxis3']['title'] = 'MOM'
@@ -334,9 +341,9 @@ def pageII():
         fig.add_trace(
             go.Scatter(
                 x=coin_df['Date'],
-                y=coin_df['chaikin-ADOSC'],
+                y=coin_df['Chaikin-ADOSC'],
                 line=dict(color='lime', width=2, dash='dot'),
-                name="chaikin-ADOSC"
+                name="Chaikin-ADOSC"
             ), row=1, col=1
         )
         # fig['layout']['yaxis4']['title'] = 'ADOSC'
@@ -344,9 +351,9 @@ def pageII():
         # Bar chart https://plotly.com/python-api-reference/generated/plotly.graph_objects.bar.html#plotly.graph_objects.bar.Marker
         fig.add_trace(
             go.Bar(
-                x = coin_df['Date'],
-                y = coin_df['Volume'],
-                marker = dict(color=coin_df['Volume'], colorscale = 'aggrnyl_r'),
+                x=coin_df['Date'],
+                y=coin_df['Volume'],
+                marker=dict(color=coin_df['Volume'], colorscale='aggrnyl_r'),
                 name = 'Volume'
             ), row=2, col=1
         )
