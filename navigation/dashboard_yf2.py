@@ -10,7 +10,6 @@ import plotly.express as px
 # from st_screen_stats import ScreenData, StreamlitNativeWidgetScreen, WindowQuerySize, WindowQueryHelper
 # from pytz import timezone
 import talib
-import matplotlib.pyplot as plt
 
 MA_COLOR = 'orange'
 MA_COLOR2 = 'red'
