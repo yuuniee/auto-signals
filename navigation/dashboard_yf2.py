@@ -6,9 +6,11 @@ import yfinance as yf
 from datetime import date, timedelta
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import plotly.express as px
 # from st_screen_stats import ScreenData, StreamlitNativeWidgetScreen, WindowQuerySize, WindowQueryHelper
 # from pytz import timezone
 import talib
+import matplotlib.pyplot as plt
 
 MA_COLOR = 'orange'
 MA_COLOR2 = 'red'
@@ -135,8 +137,13 @@ def pageII():
     btc_df = load_data(name='BTC-USD', period=period_dict[check], )
     btc_df = btc_df[-period_dict[check]:]
 
+    close_df = pd.DataFrame({})
+    close_df['BTC-USD'] = btc_df.reset_index(drop=True)['Close']
+    for n in CALL_LIST:
+        close_df[n] = load_data(name=n, period=period_dict[check], ).reset_index(drop=True)['Close']
+
     # c1, c2 = st.columns(2)
-    def draw_chart(name, n, h=300):
+    def draw_chart(name, n, h=300, is_vol=False):
         # st.header('R1')
         coin = name#'BTC'
         # Page
@@ -170,8 +177,12 @@ def pageII():
         coin_df['Prev_Close'] = info["prevClose"]
         coin_df = coin_df[-period_dict[check]:]
 
+
         # Candle and volume chart
-        fig = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1, specs=[[{'secondary_y': True,}]])  # row_heights = [100, 50])
+        if is_vol:
+            fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, specs=[[{'secondary_y': True,}], [{'secondary_y': False,}]], row_heights = [100, 25])
+        else:
+            fig = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1, specs=[[{'secondary_y': True,}]], )
         if type == 'line':
             fig.add_trace(
                 go.Scatter(x=coin_df['Date'], y=coin_df['Close'], name='ClosePrice'),
@@ -240,15 +251,16 @@ def pageII():
         #     ), row=1, col=2
         # )
 
-        # # Bar chart https://plotly.com/python-api-reference/generated/plotly.graph_objects.bar.html#plotly.graph_objects.bar.Marker
-        # fig.add_trace(
-        #     go.Bar(
-        #         x = coin_df['Date'],
-        #         y = coin_df['Volume'],
-        #         marker = dict(color = coin_df['Volume'], colorscale = 'aggrnyl_r'),
-        #         name = 'Volume'
-        #     ), row = 2, col = 1
-        # )
+        if is_vol:
+            # Bar chart https://plotly.com/python-api-reference/generated/plotly.graph_objects.bar.html#plotly.graph_objects.bar.Marker
+            fig.add_trace(
+                go.Bar(
+                    x = coin_df['Date'],
+                    y = coin_df['Volume'],
+                    marker = dict(color = coin_df['Volume'], colorscale = 'aggrnyl_r'),
+                    name = 'Volume'
+                ), row=2, col=1
+            )
         # fig['layout']['xaxis']['title'] = 'Date'
         fig['layout']['yaxis']['title'] = 'Price'
         # fig['layout']['yaxis2']['title'] = 'Volume'
@@ -295,15 +307,16 @@ def pageII():
         coin_df['Prev_Close'] = info["prevClose"]
 
         coin_df['Close_Price'] = normalize(coin_df['Close'])
-        coin_df['RSI'] = normalize(talib.RSI(coin_df.Close))
-        coin_df['MOMENTUM'] = normalize(talib.MOM(coin_df.Close))
-        coin_df['Chaikin-ADOSC'] = normalize(talib.ADOSC(coin_df.High, coin_df.Low, coin_df.Close, coin_df.Volume, ))
+        coin_df['STOCH_RSI'] = normalize(talib.STOCHRSI())
+        # coin_df['RSI'] = normalize(talib.RSI(coin_df.Close))
+        # coin_df['MOMENTUM'] = normalize(talib.MOM(coin_df.Close))
+        # coin_df['Chaikin-ADOSC'] = normalize(talib.ADOSC(coin_df.High, coin_df.Low, coin_df.Close, coin_df.Volume, ))
         coin_df = coin_df[-period_dict[check]:]
 
         # Candle and volume chart
         # fig = make_subplots(rows=5, cols=1, shared_xaxes=True, vertical_spacing=0.1, row_heights = [100, 100, 100, 100, 100])
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1,
-                            row_heights=[100, 50])
+        fig = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1,)
+                            #row_heights=[100, 50])
 
         fig.add_trace(
             go.Scatter(
@@ -348,16 +361,16 @@ def pageII():
         )
         # fig['layout']['yaxis4']['title'] = 'ADOSC'
 
-        # Bar chart https://plotly.com/python-api-reference/generated/plotly.graph_objects.bar.html#plotly.graph_objects.bar.Marker
-        fig.add_trace(
-            go.Bar(
-                x=coin_df['Date'],
-                y=coin_df['Volume'],
-                marker=dict(color=coin_df['Volume'], colorscale='aggrnyl_r'),
-                name = 'Volume'
-            ), row=2, col=1
-        )
-        fig['layout']['yaxis2']['title'] = 'Volume'
+        # # Bar chart https://plotly.com/python-api-reference/generated/plotly.graph_objects.bar.html#plotly.graph_objects.bar.Marker
+        # fig.add_trace(
+        #     go.Bar(
+        #         x=coin_df['Date'],
+        #         y=coin_df['Volume'],
+        #         marker=dict(color=coin_df['Volume'], colorscale='aggrnyl_r'),
+        #         name = 'Volume'
+        #     ), row=2, col=1
+        # )
+        # fig['layout']['yaxis2']['title'] = 'Volume'
         # fig['layout']['xaxis']['title'] = 'Date'
         fig.update_layout(margin=dict(t=40, b=0), height=h)
 
@@ -370,9 +383,24 @@ def pageII():
 
     c1, c2 = st.columns(2)
     with c1:
-        draw_chart('BTC-USD', 5, 400)
+        draw_chart('BTC-USD', 5, 400, is_vol=True)
     with c2:
-        draw_multi_chart('BTC-USD', 6, 400)
+        # draw_multi_chart('BTC-USD', 6, 400)
+
+        # plt.figure(figsize=(2, 4))
+        # fig, ax = plt.subplots()
+        # ax.hist(btc_df['Close'], bins=20, )
+        # st.pyplot(fig, use_container_width=True)
+
+        st.header(f'Asset Correlations', divider='gray')
+        corrs = close_df.corr()
+        fig = px.imshow(corrs, width=800, height=800, text_auto=True, aspect="auto", labels=dict(color="Correlation"), color_continuous_scale='gray')
+        fig.update_layout(margin=dict(t=0, b=0), xaxis_rangeslider_visible=False, height=400)
+        st.plotly_chart(fig, use_container_width=True, )
+
+        # # Show data
+        # if st.checkbox(f'Show data-c'):
+        #     st.dataframe(close_df)
 
     st.divider()
 
