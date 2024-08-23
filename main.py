@@ -1,7 +1,7 @@
 # import asyncio
 # from datetime import datetime
 import streamlit as st
-from navigation import landing, dashboard_yf, calculator, dashboard_yf2
+from navigation import landing, dashboard_ti, dashboard_ml, dashboard_yf2, dashboard_ti2
 from streamlit.components.v1 import html
 import warnings
 warnings.filterwarnings(action='ignore')
@@ -143,10 +143,11 @@ st.markdown(
 )
 
 pages = {
-    '🏠 Main Page': landing.pageI,
+    '🏠 Main Page': landing.page1,
     # '📈 Market Dashboard': dashboard_yf.pageII,
-    '📈 Market Analysis': dashboard_yf2.pageII,
-    '💰 Calculator': calculator.calculator
+    '📈 Crossing Markets': dashboard_yf2.page2,
+    '📊 Technical Analysis': dashboard_ti2.page3,
+    '🛸 AI Predictions': dashboard_ml.calculator,
 }
 
 selected_page = st.sidebar.radio("Navigation", pages.keys())
