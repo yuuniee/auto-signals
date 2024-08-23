@@ -99,7 +99,7 @@ def normalize(df):
     # return np.log(df)
 
 
-def pageII():
+def page2():
     start_proc = time.time()
 
     todate = pd.to_datetime('now', utc=True) - timedelta(days=1)
@@ -264,6 +264,8 @@ def pageII():
         fig['layout']['yaxis']['title'] = 'Price'
         # fig['layout']['yaxis2']['title'] = 'Volume'
         fig.update_layout(margin=dict(t=40, b=0), xaxis_rangeslider_visible=False, height=h)
+        # fig.update_traces(mode="markers+lines", hovertemplate=None)
+        fig.update_layout(hovermode="x unified")
 
         st.plotly_chart(fig, use_container_width=True, )#height=200)  # theme=None)
         # st.plotly_chart(fig, use_container_width=True, )  # theme=None)
@@ -372,6 +374,8 @@ def pageII():
         # fig['layout']['yaxis2']['title'] = 'Volume'
         # fig['layout']['xaxis']['title'] = 'Date'
         fig.update_layout(margin=dict(t=40, b=0), height=h)
+        # fig.update_traces(mode="markers+lines", hovertemplate=None)
+        fig.update_layout(hovermode="x unified")
 
         st.plotly_chart(fig, use_container_width=False, )#height=300)  # theme=None)
         # st.plotly_chart(fig, use_container_width=True, )  # theme=None)
@@ -380,9 +384,10 @@ def pageII():
         # if st.checkbox(f'Show data{n}'):
         #     st.dataframe(coin_df)
 
+    top_height = 400
     c1, c2 = st.columns(2)
     with c1:
-        draw_chart('BTC-USD', 5, 400, is_vol=True)
+        draw_chart('BTC-USD', 5, top_height, is_vol=True)
     with c2:
         # draw_multi_chart('BTC-USD', 6, 400)
 
@@ -394,7 +399,7 @@ def pageII():
         st.header(f'Asset Correlations', divider='gray')
         corrs = close_df.corr()
         fig = px.imshow(corrs, width=800, height=800, text_auto=True, aspect="auto", labels=dict(color="Correlation"), color_continuous_scale='gray')
-        fig.update_layout(margin=dict(t=0, b=0), xaxis_rangeslider_visible=False, height=400)
+        fig.update_layout(margin=dict(t=0, b=0), xaxis_rangeslider_visible=False, height=top_height)
         st.plotly_chart(fig, use_container_width=True, )
 
         # # Show data

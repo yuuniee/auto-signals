@@ -9,7 +9,7 @@ def call_main_image():
                use_column_width=True, )  # width=1000)
 
 
-def pageI():
+def page1():
     call_main_image()
     # st.markdown("![Alt Text](D:/cryptodashboard-streamlit-main/3d9225136727009.620034af0e13f.gif)")
     """### gif from local file"""
