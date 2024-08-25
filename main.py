@@ -147,6 +147,7 @@ pages = {
     # '📈 Market Dashboard': dashboard_yf.pageII,
     '📈 Crossing Markets': dashboard_yf2.page2,
     '📊 Technical Analysis': dashboard_ti2.page3,
+    '🧲 Market Neutralization': dashboard_ml.calculator,
     '🛸 AI Predictions': dashboard_ml.calculator,
 }
 
