@@ -4,6 +4,8 @@ import talib
 import pandas as pd
 import numpy as np
 
+IS_LONG = True
+
 
 class MovingAverageStrategy(Strategy):
     def init(self):
@@ -29,27 +31,35 @@ class MovingAverageStrategy(Strategy):
 
 
 class RelativeStrengthIndexStrategy(Strategy):
-    n1 = 11
+    n1 = 13
     n2 = 0
-    n_enter = 28
-    n_exit = 36
+    n_enter = 31
+    n_exit = 34
+    my_name = 'RSI'
 
     def __init__(self, broker, data, params):
         super().__init__(broker, data, params)
         self.rsi = None
-        self.long_in = None
-        self.long_out = None
+        self.enter = None
+        self.exit = None
 
     def init(self):
         self.rsi = self.I(talib.RSI, self.data.Close, self.n1)
-        self.long_in = self.n_enter
-        self.long_out = self.n_exit
+        self.enter = self.n_enter
+        self.exit = self.n_exit
 
     def next(self):
-        I_L = self.long_in > self.rsi[-1]
-        O_L = self.long_out < self.rsi[-1]
-        I_S = False#75 < self.rsi[-1]
-        O_S = False#60 > self.rsi[-1]
+        if IS_LONG:
+            I_L = self.enter > self.rsi[-1]
+            O_L = self.exit < self.rsi[-1]
+            I_S = False#75 < self.rsi[-1]
+            O_S = False#60 > self.rsi[-1]
+        else:
+            I_L = False
+            O_L = False
+            I_S = self.enter < self.rsi[-1]
+            O_S = self.exit > self.rsi[-1]
+
         is_position = self.position.is_long or self.position.is_short
 
         if not is_position:
@@ -140,7 +150,7 @@ class AroonOSCStrategy(Strategy):
 class MoneyFlowIndexStrategy(Strategy):
     n1 = 9
     n2 = 0
-    n_enter = 18
+    n_enter = 19
     n_exit = 40
 
     def __init__(self, broker, data, params):
@@ -197,19 +207,43 @@ def run_test(data, sg=RelativeStrengthIndexStrategy, in_cash=10000*10000, ):
     return res
 
 
+# opt_params = {'RSI': [range(5, 35, 2), [0], range(20, 40, 2), range(25, 60, 2)]}
+long_opt_params = {'RSI': [range(5, 35, 2),
+                           [0],
+                           range(5, 40, 2),
+                           range(10, 60, 2)], }
+short_opt_params = {'RSI': [range(5, 35, 2),
+                            [0],
+                            range(90, 70, -2),
+                            range(85, 60, -2)], }
+
+
 def run_optimizing(data, sg, in_cash=10000*10000, ):
     backtest = Backtest(data, sg, cash=in_cash, commission=.002)
-    results, heatmap = backtest.optimize(
-        n1=range(3, 35, 2),
-        n2=[0],
-        n_enter=range(5, 40, 2),
-        n_exit=range(20, 60, 2),
-        constraint=lambda p: p.n_exit > p.n_enter,
-        maximize='Sharpe Ratio', #'Equity Final [$]',
-        max_tries=3000,
-        random_state=42,
-        return_heatmap=True,
-    )
+    if IS_LONG:
+        results, heatmap = backtest.optimize(
+            n1=long_opt_params['RSI'][0],
+            n2=long_opt_params['RSI'][1],
+            n_enter=long_opt_params['RSI'][2],
+            n_exit=long_opt_params['RSI'][3],
+            constraint=lambda p: p.n_exit > p.n_enter,
+            maximize='Sharpe Ratio', # 'Equity Final [$]',
+            max_tries=5000,
+            random_state=42,
+            return_heatmap=True,
+        )
+    else:
+        results, heatmap = backtest.optimize(
+            n1=short_opt_params['RSI'][0],
+            n2=short_opt_params['RSI'][1],
+            n_enter=short_opt_params['RSI'][2],
+            n_exit=short_opt_params['RSI'][3],
+            constraint=lambda p: p.n_exit < p.n_enter,
+            maximize='Sharpe Ratio', # 'Equity Final [$]',
+            max_tries=5000,
+            random_state=42,
+            return_heatmap=True,
+        )
     backtest.plot()
     heatmap.values[np.isnan(heatmap.values)] = 0
     max_val = np.max(heatmap.values)
@@ -229,6 +263,19 @@ def run_optimizing(data, sg, in_cash=10000*10000, ):
         'MDD': results['Max. Drawdown [%]'],
     }
     return res, best_opt
+
+
+def get_strategy(name='RSI'):
+    if name == 'RSI':
+        return RelativeStrengthIndexStrategy
+    elif name == 'MFI':
+        return MoneyFlowIndexStrategy
+    elif name == 'AROON':
+        return AroonOSCStrategy
+    elif name == 'WILLR':
+        return WilliamsPercentR
+    else:
+        return None
 
 
 if __name__ == '__main__':
