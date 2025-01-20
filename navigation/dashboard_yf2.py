@@ -15,7 +15,7 @@ MA_COLOR = 'orange'
 MA_COLOR2 = 'red'
 PC_COLOR = 'grey'
 # IN_DATA = {}
-CALL_LIST = ['NQ=F', '^VIX', 'ZB=F', 'JPY=X', ]
+CALL_LIST = ['NQ=F', 'ZB=F', 'GC=F', 'JPY=X', ]
 
 
 # with st.spinner('Wait for it...'):

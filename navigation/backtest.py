@@ -115,6 +115,7 @@ class AroonOSCStrategy(Strategy):
     n2 = 0
     n_enter = 5
     n_exit = 22
+    my_name = 'AROON'
 
     def __init__(self, broker, data, params):
         super().__init__(broker, data, params)
@@ -129,10 +130,17 @@ class AroonOSCStrategy(Strategy):
         self.long_out = self.n_exit
 
     def next(self):
-        I_L = self.long_in > self.aroon[-1]
-        O_L = self.long_out < self.aroon[-1]
-        I_S = False#75 < self.rsi[-1]
-        O_S = False#60 > self.rsi[-1]
+        if IS_LONG:
+            I_L = self.long_in >= self.aroon[-1]
+            O_L = self.long_out <= self.aroon[-1]
+            I_S = False
+            O_S = False
+        else:
+            I_L = False
+            O_L = False
+            I_S = self.long_in <= self.aroon[-1]
+            O_S = self.long_out >= self.aroon[-1]
+
         is_position = self.position.is_long or self.position.is_short
 
         if not is_position:
@@ -165,12 +173,18 @@ class MoneyFlowIndexStrategy(Strategy):
         self.long_out = self.n_exit
 
     def next(self):
-        I_L = self.long_in > self.mfi[-1]
-        O_L = self.long_out < self.mfi[-1]
-        I_S = False#75 < self.rsi[-1]
-        O_S = False#60 > self.rsi[-1]
+        if IS_LONG:
+            I_L = self.long_in > self.mfi[-1]
+            O_L = self.long_out < self.mfi[-1]
+            I_S = False
+            O_S = False
+        else:
+            I_L = False
+            O_L = False
+            I_S = self.long_in <= self.mfi[-1]
+            O_S = self.long_out >= self.mfi[-1]
         is_position = self.position.is_long or self.position.is_short
-
+        # print(is_position, self.mfi[-1])
         if not is_position:
             if I_L:
                 self.buy()
@@ -212,10 +226,10 @@ long_opt_params = {'RSI': [range(5, 35, 2),
                            [0],
                            range(5, 40, 2),
                            range(10, 60, 2)], }
-short_opt_params = {'RSI': [range(5, 35, 2),
+short_opt_params = {'RSI': [range(4, 20, 2),
                             [0],
-                            range(90, 70, -2),
-                            range(85, 60, -2)], }
+                            range(99, 60, -3),
+                            range(90, 10, -2)], }
 
 
 def run_optimizing(data, sg, in_cash=10000*10000, ):
@@ -288,8 +302,6 @@ if __name__ == '__main__':
     ohlcv['Date'] = pd.to_datetime(ohlcv['Date'])
     ohlcv = ohlcv.set_index('Date')
 
-    res = run_optimizing(data=ohlcv, sg=WilliamsPercentR)
+    res = run_optimizing(data=ohlcv, sg=MoneyFlowIndexStrategy)
+    # res = run_test(data=ohlcv, sg=MoneyFlowIndexStrategy)
     print(res)
-
-    # res = run_test(data=ohlcv, st=MoneyFlowIndexStrategy)
-    # print(res)
