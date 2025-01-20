@@ -9,7 +9,7 @@ warnings.filterwarnings(action='ignore')
 
 @st.cache_resource
 def initializer():
-    call_list = ['NQ=F', '^VIX', 'ZB=F', 'JPY=X', ]
+    call_list = dashboard_yf2.CALL_LIST
     dashboard_yf2.pre_load_data(call_list)
     # for c in call_list:
     #     inmemory.in_data[c] = load_data(c)
